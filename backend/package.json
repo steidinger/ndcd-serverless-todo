@@ -19,15 +19,18 @@
     "@types/jsonwebtoken": "^8.3.2",
     "@types/node": "^10.14.4",
     "aws-sdk": "^2.433.0",
+    "serverless": "^2.28.0",
     "serverless-aws-documentation": "^1.1.0",
-    "serverless-iam-roles-per-function": "^1.0.4",
-    "serverless-plugin-canary-deployments": "^0.4.7",
-    "serverless-reqvalidator-plugin": "^1.0.3",
-    "serverless-webpack": "^5.2.0",
+    "serverless-iam-roles-per-function": "^3.1.0",
+    "serverless-reqvalidator-plugin": "^1.0.4",
+    "serverless-webpack": "^5.3.5",
     "ts-loader": "^5.3.3",
     "typescript": "^3.4.1",
     "webpack": "^4.29.6"
   },
-  "author": "Ivan Mushketyk",
+  "scripts": {
+    "deploy": "sls deploy -v"
+  },
+  "author": "Ivan Mushketyk, Frank Steidinger",
   "license": "MIT"
 }
