@@ -4,6 +4,8 @@ service:
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
+  - serverless-aws-documentation
+  - serverless-reqvalidator-plugin
 
 provider:
   name: aws
@@ -16,6 +18,19 @@ provider:
     TODOS_TABLE: Serverless-Todos-${self:provider.stage}
     TODOS_ID_INDEX: Serverless-TodoIdIndex-${self:provider.stage}
     ATTACHMENTS_S3_BUCKET: serverless-todos-attachments-269004290177-${self:provider.stage}
+
+custom:
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Todo API
+        description: Serverless application for todo lists
+    models:
+      - name: CreateTodoRequest
+        contentType: application/json
+        schema: ${file(src/requests/create-todo-schema.json)}
+    
 functions:
 
   # Auth:
@@ -27,6 +42,7 @@ functions:
       - http:
           method: get
           path: todos
+          cors: true
     iamRoleStatements:
       - Effect: "Allow"
         Action:
@@ -39,9 +55,12 @@ functions:
       - http:
           method: post
           path: todos
-          # request:
-          #   schema:
-          #     application/json: ${file(models/create-todo-model.json)}
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new todo
+            description: Create a new todo
+            requestModels:
+              'application/json': CreateTodoRequest
     iamRoleStatements:
       - Effect: "Allow"
         Action:
@@ -146,3 +165,13 @@ resources:
               Action: 's3:GetObject'
               Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*'
         Bucket: !Ref AttachmentsBucket
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'RequestBodyValidator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+        

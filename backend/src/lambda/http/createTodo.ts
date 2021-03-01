@@ -23,12 +23,15 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     createdAt: new Date().toISOString(),
     done: false,
   }
+
+  logger.info(`adding todo ${JSON.stringify(newTodo)}`)
   
   await docClient.put({
     TableName: todosTable,
     Item: newTodo,
   }).promise();
 
+  logger.info('added todo');
   return {
     statusCode: 201,
     headers: {
