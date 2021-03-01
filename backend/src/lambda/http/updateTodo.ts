@@ -28,6 +28,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   }).promise()
 
   if (result.Count === 0) {
+    logger.info(`todo with ID ${todoId} not found`);
     return {
       statusCode: 404,
       headers: {
@@ -41,20 +42,19 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   todo.name = updatedTodo.name;
   todo.dueDate = updatedTodo.dueDate;
   todo.done = updatedTodo.done;
+  logger.info('Updating todo');
 
   await docClient.put({
     TableName: todosTable,
     Item: todo,
   }).promise();
 
- return {
+  logger.info('Update complete');
+  return {
     statusCode: 200,
     headers: {
       'Access-Control-Allow-Origin': '*'
     },
     body: JSON.stringify(todo)
   }
-
-
-
 }
