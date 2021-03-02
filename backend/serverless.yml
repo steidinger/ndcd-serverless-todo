@@ -30,6 +30,9 @@ custom:
       - name: CreateTodoRequest
         contentType: application/json
         schema: ${file(src/requests/create-todo-schema.json)}
+      - name: UpdateTodoRequest
+        contentType: application/json
+        schema: ${file(src/requests/update-todo-schema.json)}
     
 functions:
 
@@ -73,6 +76,12 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update a todo
+            description: Update a todo
+            requestModels:
+              'application/json': UpdateTodoRequest
     iamRoleStatements:
       - Effect: "Allow"
         Action:
