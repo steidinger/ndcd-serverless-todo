@@ -18,7 +18,7 @@ provider:
     TODOS_TABLE: Serverless-Todos-${self:provider.stage}
     TODOS_ID_INDEX: Serverless-TodoIdIndex-${self:provider.stage}
     ATTACHMENTS_S3_BUCKET: serverless-todos-attachments-269004290177-${self:provider.stage}
-
+    SIGNED_URL_EXPIRATION: 300 # seconds
 custom:
   documentation:
     api:
@@ -108,13 +108,26 @@ functions:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_ID_INDEX}
 
-  # TODO: Configure this function
-  # GenerateUploadUrl:
-  #   handler: src/lambda/http/generateUploadUrl.handler
-  #   events:
-  #     - http:
-  #         method: post
-  #         path: todos/{todoId}/attachment
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: "Allow"
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_ID_INDEX}
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*
 
 resources:
   Resources:
