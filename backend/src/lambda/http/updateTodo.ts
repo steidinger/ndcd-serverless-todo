@@ -39,22 +39,32 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   }
 
   const todo = result.Items[0] as TodoItem;
-  todo.name = updatedTodo.name;
-  todo.dueDate = updatedTodo.dueDate;
-  todo.done = updatedTodo.done;
   logger.info('Updating todo');
 
-  await docClient.put({
+  const updateResult = await docClient.update({
     TableName: todosTable,
-    Item: todo,
+    Key: {
+      userId: todo.userId,
+      createdAt: todo.createdAt,
+    },
+    UpdateExpression: "SET #name = :name, dueDate = :dueDate, done = :done",
+    ExpressionAttributeValues: {
+      ":name": updatedTodo.name,
+      ":dueDate": updatedTodo.dueDate,
+      ":done": updatedTodo.done,
+    },
+    ExpressionAttributeNames: {
+      "#name": "name",
+    },
+    ReturnValues: "ALL_NEW"
   }).promise();
-
+  const updated = updateResult.Attributes;
   logger.info('Update complete');
   return {
     statusCode: 200,
     headers: {
       'Access-Control-Allow-Origin': '*'
     },
-    body: JSON.stringify(todo)
+    body: JSON.stringify(updated)
   }
 }
