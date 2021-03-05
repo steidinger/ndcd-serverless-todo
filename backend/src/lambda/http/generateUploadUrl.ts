@@ -1,10 +1,13 @@
 import 'source-map-support/register'
+import middy from '@middy/core';
+import cors from '@middy/http-cors';
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import * as AWS from 'aws-sdk'
 import * as uuid from 'uuid'
 import { createLogger } from '../../utils/logger'
 import { TodoItem } from '../../models/TodoItem';
+import {getUserId} from '../utils';
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3({
@@ -17,7 +20,7 @@ const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
 const logger = createLogger("upload");
 
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const generateUploadUrlHandler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
 
   logger.info(`generate upload url for ${todoId}`)
@@ -28,6 +31,14 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       body: JSON.stringify({
         error: 'todo not found'
       })
+    }
+  }
+  const userId = getUserId(event);
+  if (todo.userId !== userId) {
+    logger.info(`user ${userId} is not allowed to add attachment to todo created by ${todo.userId}`);
+    return {
+      statusCode: 403,
+      body: '',
     }
   }
 
@@ -75,3 +86,8 @@ async function loadTodo(todoId: string): Promise<TodoItem> {
   }
   return result.Items[0] as TodoItem;
 }
+
+export const handler = middy(generateUploadUrlHandler);
+handler.use(cors({
+  origin: "http://localhost:3000"
+}));

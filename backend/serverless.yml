@@ -19,6 +19,9 @@ provider:
     TODOS_ID_INDEX: Serverless-TodoIdIndex-${self:provider.stage}
     ATTACHMENTS_S3_BUCKET: serverless-todos-attachments-269004290177-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300 # seconds
+    AUTH_0_JWKS_URL: https://dev-383jvs9k.eu.auth0.com/.well-known/jwks.json
+    AUTH_0_SECRET_ID: Auth0-Secret-${self:provider.stage}
+
 custom:
   documentation:
     api:
@@ -36,8 +39,8 @@ custom:
     
 functions:
 
-  # Auth:
-  #   handler: src/lambda/auth/auth0Authorizer.handler
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler
@@ -46,6 +49,7 @@ functions:
           method: get
           path: todos
           cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: "Allow"
         Action:
@@ -58,7 +62,9 @@ functions:
       - http:
           method: post
           path: todos
+          cors: true
           reqValidatorName: RequestBodyValidator
+          authorizer: Auth
           documentation:
             summary: Create a new todo
             description: Create a new todo
@@ -76,7 +82,9 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          cors: true
           reqValidatorName: RequestBodyValidator
+          authorizer: Auth
           documentation:
             summary: Update a todo
             description: Update a todo
@@ -98,6 +106,8 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: "Allow"
         Action:
@@ -114,6 +124,8 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: "Allow"
         Action:

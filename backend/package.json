@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "description": "Serverless TODO image app",
   "dependencies": {
+    "@middy/core": "^1.5.2",
+    "@middy/http-cors": "^1.5.2",
     "@types/axios": "^0.14.0",
     "@types/http-errors": "^1.6.1",
     "aws-xray-sdk": "^2.2.0",
     "axios": "^0.19.0",
     "http-errors": "^1.7.2",
     "jsonwebtoken": "^8.5.1",
-    "middy": "^0.27.0",
+    "jwk-to-pem": "^2.0.4",
     "source-map-support": "^0.5.11",
     "uuid": "^3.3.2",
     "winston": "^3.2.1"
@@ -17,6 +19,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.17",
     "@types/jsonwebtoken": "^8.3.2",
+    "@types/jwk-to-pem": "^2.0.0",
     "@types/node": "^10.14.4",
     "aws-sdk": "^2.433.0",
     "serverless": "^2.28.0",
