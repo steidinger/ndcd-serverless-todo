@@ -5,8 +5,8 @@ import { TodoItem } from '../models/TodoItem';
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
-import * as TodoAccess from '../dataLayer/TodoAccess';
-import {getAttachmentUrl, getUploadUrl} from '../dataLayer/AttachmentAccess';
+import * as TodoAccess from '../dataLayer/todoAccess';
+import {getAttachmentUrl, getUploadUrl} from '../dataLayer/attachmentAccess';
 
 const logger = createLogger("business-layer");
 
