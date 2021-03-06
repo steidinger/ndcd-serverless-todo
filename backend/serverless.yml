@@ -1,11 +1,13 @@
-service:
-  name: serverless-todo-app
+service: serverless-todo-app
 
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
+
+package:
+  individually: true
 
 provider:
   name: aws
