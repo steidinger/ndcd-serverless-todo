@@ -1,12 +1,12 @@
 import 'source-map-support/register'
 import middy from '@middy/core';
 import cors from '@middy/http-cors';
-
+import httpErrorHandler from '@middy/http-error-handler';
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 
 import { createLogger } from '../../utils/logger'
-import {getUserId} from '../utils';
-import {loadTodo, deleteTodo} from '../../dataLayer/TodoAccess';
+import { getUserId } from '../utils';
+import { deleteTodo } from '../../businessLayer/todos';
 
 const logger = createLogger("delete-todo");
 
@@ -16,26 +16,8 @@ export const deleteTodoHandler: APIGatewayProxyHandler = async (event: APIGatewa
 
   logger.info(`Processing delete event for ID ${todoId}`);
   const userId = getUserId(event);
-  const todo = await loadTodo(todoId);
 
-  if (!todo) {
-    logger.info(`todo with ID ${todoId} not found`);
-    return {
-      statusCode: 404,
-      body: ''
-    }
-  }
-
-  if (todo.userId !== userId) {
-    logger.info(`user ${userId} is not allowed to delete todo created by ${todo.userId}`);
-    return {
-      statusCode: 403,
-      body: '',
-    }
-  }
-  logger.info(`deleting todo with ID ${todoId}, userId ${todo.userId}, createdAt ${todo.createdAt}`);
-  await deleteTodo(todo);
-  logger.info('deleted todo');
+  await deleteTodo(todoId, userId);
 
   return {
     statusCode: 204,
@@ -44,6 +26,8 @@ export const deleteTodoHandler: APIGatewayProxyHandler = async (event: APIGatewa
 }
 
 export const handler = middy(deleteTodoHandler);
-handler.use(cors({
-  origin: "http://localhost:3000"
-}));
+handler
+  .use(httpErrorHandler())
+  .use(cors({
+    origin: "http://localhost:3000"
+  }));
