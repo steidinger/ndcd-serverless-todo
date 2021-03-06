@@ -3,20 +3,12 @@ import middy from '@middy/core';
 import cors from '@middy/http-cors';
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import * as AWS from 'aws-sdk'
 import * as uuid from 'uuid'
 import { createLogger } from '../../utils/logger'
-import { TodoItem } from '../../models/TodoItem';
 import {getUserId} from '../utils';
+import {loadTodo, setAttachmentUrl} from '../../dataLayer/TodoAccess';
+import {getAttachmentUrl, getUploadUrl} from '../../dataLayer/AttachmentAccess';
 
-const docClient = new AWS.DynamoDB.DocumentClient();
-const s3 = new AWS.S3({
-  signatureVersion: 'v4'
-});
-const todosTable = process.env.TODOS_TABLE
-const todosIdIndex = process.env.TODOS_ID_INDEX;
-const bucketName = process.env.ATTACHMENTS_S3_BUCKET;
-const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
 const logger = createLogger("upload");
 
@@ -43,26 +35,12 @@ export const generateUploadUrlHandler: APIGatewayProxyHandler = async (event: AP
   }
 
   const attachmentId = uuid.v4();
+  const attachmentUrl = getAttachmentUrl(attachmentId);
   logger.info(`updating todo with attachment url for ${attachmentId}`)
-  await docClient.update({
-    TableName: todosTable,
-    Key: {
-      "userId": todo.userId,
-      "createdAt": todo.createdAt,
-    },
-    UpdateExpression: "SET attachmentUrl = :attachmentUrl",
-    ExpressionAttributeValues: {
-      ":attachmentUrl": `https://${bucketName}.s3.amazonaws.com/${attachmentId}`
-    },
-    ReturnValues: "NONE"
-  }).promise();
+  await setAttachmentUrl(todo, attachmentUrl);
 
   logger.info(`creating signed URL`);
-  const uploadUrl = s3.getSignedUrl('putObject', {
-    Bucket: bucketName,
-    Key: attachmentId,
-    Expires: urlExpiration
-  });
+  const uploadUrl = getUploadUrl(attachmentId);
 
   return {
     statusCode: 201,
@@ -70,21 +48,6 @@ export const generateUploadUrlHandler: APIGatewayProxyHandler = async (event: AP
       uploadUrl
     })
   }
-}
-
-async function loadTodo(todoId: string): Promise<TodoItem> {
-  const result = await docClient.query({
-    TableName: todosTable,
-    IndexName: todosIdIndex,
-    KeyConditionExpression: 'todoId = :todoId',
-    ExpressionAttributeValues: {
-      ':todoId': todoId
-    }
-  }).promise();
-  if (result.Count === 0) {
-    return undefined;
-  }
-  return result.Items[0] as TodoItem;
 }
 
 export const handler = middy(generateUploadUrlHandler);

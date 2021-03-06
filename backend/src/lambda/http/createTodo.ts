@@ -1,7 +1,6 @@
 import 'source-map-support/register'
 import middy from '@middy/core';
 import cors from '@middy/http-cors';
-import * as AWS  from 'aws-sdk'
 import * as uuid from 'uuid'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 
@@ -9,11 +8,9 @@ import {TodoItem} from '../../models/TodoItem';
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { createLogger } from '../../utils/logger'
 import {getUserId} from '../utils';
+import {createTodo} from '../../dataLayer/TodoAccess';
 
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
 const logger = createLogger("create-todo");
-
 
 export const createTodoHandler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.info("processing create todo request");
@@ -29,11 +26,7 @@ export const createTodoHandler: APIGatewayProxyHandler = async (event: APIGatewa
   }
 
   logger.info(`adding todo ${JSON.stringify(newTodo)}`)
-  
-  await docClient.put({
-    TableName: todosTable,
-    Item: newTodo,
-  }).promise();
+  await createTodo(newTodo);
 
   logger.info('added todo');
   return {
