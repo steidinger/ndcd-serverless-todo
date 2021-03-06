@@ -14,6 +14,10 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'eu-central-1'}
 
+  tracing:
+    lambda: true
+    apiGateway: true
+
   environment:
     TODOS_TABLE: Serverless-Todos-${self:provider.stage}
     TODOS_ID_INDEX: Serverless-TodoIdIndex-${self:provider.stage}
@@ -117,6 +121,11 @@ functions:
         Action:
           - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_ID_INDEX}
+      - Effect: Allow
+        Action:
+          - s3:DeleteObject
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*
 
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler

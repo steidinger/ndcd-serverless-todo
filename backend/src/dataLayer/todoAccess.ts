@@ -1,8 +1,11 @@
 import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 import { TodoItem } from '../models/TodoItem';
 import { TodoUpdate } from '../models/TodoUpdate';
 
-const docClient = new AWS.DynamoDB.DocumentClient();
+const XAWS = AWSXRay.captureAWS(AWS)
+
+const docClient = new XAWS.DynamoDB.DocumentClient();
 const todosTable = process.env.TODOS_TABLE;
 const todosIdIndex = process.env.TODOS_ID_INDEX;
 
@@ -73,16 +76,17 @@ export async function updateTodo(todo: TodoItem, update: TodoUpdate): Promise<To
     return updated as TodoItem;
 }
 
-export async function setAttachmentUrl(todo: TodoItem, attachmentUrl: string): Promise<void> {
+export async function addAttachment(todo: TodoItem, attachmentUrl: string, attachmentId: string): Promise<void> {
     await docClient.update({
         TableName: todosTable,
         Key: {
             "userId": todo.userId,
             "createdAt": todo.createdAt,
         },
-        UpdateExpression: "SET attachmentUrl = :attachmentUrl",
+        UpdateExpression: "SET attachmentUrl = :attachmentUrl, attachmentId = :attachmentId",
         ExpressionAttributeValues: {
             ":attachmentUrl": attachmentUrl,
+            ":attachmentId": attachmentId,
         },
         ReturnValues: "NONE"
     }).promise();

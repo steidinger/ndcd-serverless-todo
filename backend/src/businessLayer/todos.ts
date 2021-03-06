@@ -6,7 +6,7 @@ import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
 import * as TodoAccess from '../dataLayer/todoAccess';
-import {getAttachmentUrl, getUploadUrl} from '../dataLayer/attachmentAccess';
+import {deleteAttachment, getAttachmentUrl, getUploadUrl} from '../dataLayer/attachmentAccess';
 
 const logger = createLogger("business-layer");
 
@@ -36,6 +36,10 @@ export async function deleteTodo(todoId: string, userId: string): Promise<void> 
     }
     logger.info(`deleting todo with ID ${todoId}, userId ${todo.userId}, createdAt ${todo.createdAt}`);
     await TodoAccess.deleteTodo(todo);
+    if (todo.attachmentId) {
+        logger.info(`deleting attachment ${todo.attachmentId} for todo ${todoId}`);
+        await deleteAttachment(todo.attachmentId);
+    }
     logger.info('deleted todo');  
     return null;
 }
@@ -53,7 +57,7 @@ export async function addAttachment(todoId: string, userId: string): Promise<str
     const attachmentId = uuid.v4();
     const attachmentUrl = getAttachmentUrl(attachmentId);
     logger.info(`updating todo with attachment url for ${attachmentId}`)
-    await TodoAccess.setAttachmentUrl(todo, attachmentUrl);
+    await TodoAccess.addAttachment(todo, attachmentUrl, attachmentId);
  
     logger.info(`creating signed URL`);
     return getUploadUrl(attachmentId);
